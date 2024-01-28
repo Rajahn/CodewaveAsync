@@ -1,0 +1,57 @@
+package edu.vt.ranhuo.asynccore.enums;
+
+public enum CommonConstants {
+    ;
+    public static final String PREFIX = "codewave:default";
+    public static final String MASTER_PREFIX = "master";
+    public static final String SLAVE_PREFIX = "slave";
+
+    public static final String MASTER_LOCK = "lock:consume:master";
+    public static final String SLAVE_LOCK = "lock:consume:slave";
+
+    public static final String HIGN_QUEUE = "queue:high";
+    public static final String MEDIUM_QUEUE = "queue:medium";
+    public static final String LOW_QUEUE = "queue:low";
+    public static final String RESULT_QUEUE = "queue:result";
+
+    public static final String EXECUTE_HASH = "hash:execute";
+    public static final String HEART_HASH = "hash:heart";
+    public static final String HASH_VALUE_SPLIT = "^codewave^";
+    public static final String HASH_VALUE_SPLIT_ESCAPE = "\\^codewave\\^";
+
+    public static final String LEADER_LOCK = "leader:lock";
+    public static final String LEADER_NAME = "leader:name";
+
+    public static final String REDIS_FORMAT = "%s%s";
+    public static final String EMPTY_STRING = "";
+    public static final String REDIS_SPLIT = ":";
+
+    public static final long MILLISECOND = 1000;
+    public static final long HEARTBEAT_INTERVAL = 30 * MILLISECOND;
+    public static final long MIN_HEARTBEAT_INTERVAL = 10 * MILLISECOND;
+    public static final int EXPIRATION_COUNT = 6;
+    public static final int MIN_EXPIRATION_COUNT = 3;
+    public static final int FIRST = 1;
+    public static final int SECOND = 2;
+    public static final int THIRD = 3;
+    public static final int FOURTH = 4;
+    public static final int FIFTH = 5;
+    public static final int SIXTH = 6;
+    public static final int SEVENTH = 7;
+    public static final int EIGHT = 7;
+    public static final int TENTH = 10;
+    public static final int ZERO = 0;
+    public static final int END_INDEX = -1;
+    public static final double DOUBLE_FIRST = 1.0;
+
+    public static final long OHOURS = 60 * 60;
+    public static final long THOURS = OHOURS * SECOND;
+    public static final long FHOURS = OHOURS * FOURTH;
+    public static final long SHOURS = OHOURS * SIXTH;
+    public static final long EHOURS = OHOURS * EIGHT;
+    public static final long HALFDAY = OHOURS * TENTH * SECOND;
+    public static final long DAYDAY = HALFDAY * SECOND;
+
+    public static final boolean FALSE = false;
+    public static final boolean TRUE = true;
+}
