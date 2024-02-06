@@ -16,10 +16,10 @@ public class SplitTest {
     @Test
     public void split() {
         String hashValue = "task_second^codewave^task_first";
-        log.info(String.join(REDIS_SPLIT, deletePillarSplit(hashValue)));
+        log.info(String.join(REDIS_SPLIT, deleteSplit(hashValue)));
     }
 
-    public List<String> deletePillarSplit(String value) {
+    public List<String> deleteSplit(String value) {
         Objects.requireNonNull(value);
         return new ArrayList<>(Arrays.asList(value.split(HASH_VALUE_SPLIT_ESCAPE)));
     }

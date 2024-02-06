@@ -158,7 +158,7 @@ public class TaskContext implements ITaskContext {
     }
 
     /**
-     * 拼接hash值
+     * 把新的value字符串添加到source字符串后面，中间用HASH_VALUE_SPLIT分隔
      * @param source
      * @param value
      * @return

@@ -22,6 +22,10 @@ public class Slave implements ISlave<String> {
         this.leaderService = new LeaderServiceImpl(context, context.slaveHashKey());
     }
 
+    //对于每一个队列，这个方法会尝试从队列的右端弹出一个元素，这个操作由context.getRedissonUtils().zrpop(queueName)完成。
+    //如果弹出的元素存在（即Optional<String>不为空），这个方法会执行以下操作：
+    //将这个元素添加到执行队列中，这个操作由service.sendExecuteQueue(context.slaveHashKey(), tValue.get())完成。
+    //从原队列中删除这个元素，这个操作由context.getRedissonUtils().zrem(queueName, tValue.get())完成
     @Override
     public Optional<String> consume() {
         return context.getRedissonUtils().lock(context.slaveConsumerLock(), Optional.empty(), (t) -> {

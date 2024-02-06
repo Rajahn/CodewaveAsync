@@ -7,9 +7,6 @@
     <version>1.0</version>
     <name>async-master</name>
     <description>async-master</description>
-    <properties>
-        <java.version>17</java.version>
-    </properties>
 
     <parent>
         <artifactId>CodewaveAsync</artifactId>
@@ -21,12 +18,38 @@
         <dependency>
             <groupId>edu.vt.ranhuo</groupId>
             <artifactId>async-core</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>1.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- slf4j依赖包 -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- logback-classic桥接器 -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+
+        <!-- logback实现 -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
         </dependency>
 
     </dependencies>

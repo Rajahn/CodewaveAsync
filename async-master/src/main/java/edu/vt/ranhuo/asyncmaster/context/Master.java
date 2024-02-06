@@ -32,7 +32,9 @@ public class Master implements IMaster<String> {
         context.getRedissonUtils().zadd(context.getQueue(queue), score, value);
         log.info("master[{}] send finished, queue: {}, score: {}, value: {}", context.masterHashKey(), queue, score, value);
     }
-
+    //如果成功获取到锁，它会尝试从resultQueue队列中弹出一个元素。这个元素是一个Optional<String>类型，可能包含一个字符串，也可能为空。
+    //如果成功弹出一个元素（即Optional<String>不为空），它会将这个元素发送到执行队列，并从resultQueue队列中移除这个元素。
+    //多个依赖相同config创建的master实例抢占同一个锁，redisson的lock方法无论是否上锁成功都会解锁
     @Override
     public Optional<String> consume() {
         return context.getRedissonUtils().lock(context.masterConsumerLock(), Optional.empty(), (t) -> {

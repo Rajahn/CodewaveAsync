@@ -92,7 +92,7 @@ public interface IMaster<T> extends Closeable {
     Map<QueueType, Integer> getQueueSize();
 
     /**
-     * 结束result任务, 此操作将删除pillarMaster执行副本中的元数据, 请确保业务层面处理成功后调动此函数
+     * 结束result任务, 此操作将删除Master执行副本中的元数据, 请确保业务层面处理成功后调动此函数
      *
      * @return
      */
@@ -109,7 +109,7 @@ public interface IMaster<T> extends Closeable {
     Set<String> getActiveNodeInfo();
 
     /**
-     * 获取Leader信息, 若leader不存在, 则pillar无法进行生产消费
+     * 获取Leader信息, 若leader不存在, 则无法进行生产消费
      */
     Optional<String> getLeaderInfo();
 
