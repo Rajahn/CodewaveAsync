@@ -54,4 +54,5 @@ public enum CommonConstants {
 
     public static final boolean FALSE = false;
     public static final boolean TRUE = true;
+    public static final int QUEUE_NUMS = 1;
 }

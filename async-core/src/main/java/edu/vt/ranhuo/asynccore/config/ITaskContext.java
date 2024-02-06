@@ -23,12 +23,6 @@ public interface ITaskContext {
 
     String leaderName();
 
-    String hignQueue();
-
-    String mediumQueue();
-
-    String lowQueue();
-
     String getQueue(QueueType queueType);
 
     List<String> getAllQueue();

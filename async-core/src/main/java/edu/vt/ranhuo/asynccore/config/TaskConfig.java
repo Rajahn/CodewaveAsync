@@ -18,6 +18,9 @@ public class TaskConfig implements ITaskConfig{
     private long heartbeatInterval = HEARTBEAT_INTERVAL;
     @Builder.Default
     private int expirationCount = EXPIRATION_COUNT;
+
+    @Builder.Default
+    private int queueNums = QUEUE_NUMS;
     @Override
     public int getExpirationCount() { //不能小于3
         return Math.max(expirationCount, MIN_EXPIRATION_COUNT);

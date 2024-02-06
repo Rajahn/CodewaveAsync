@@ -87,28 +87,13 @@ public class TaskContext implements ITaskContext {
     }
 
     @Override
-    public String hignQueue() {
-        return redisFormat(prefix(), HIGN_QUEUE);
-    }
-
-    @Override
-    public String mediumQueue() {
-        return redisFormat(prefix(), MEDIUM_QUEUE);
-    }
-
-    @Override
-    public String lowQueue() {
-        return redisFormat(prefix(), LOW_QUEUE);
-    }
-
-    @Override
     public String getQueue(QueueType queueType) {
         return redisFormat(prefix(), queueType.getQueue());
     }
 
     @Override
     public List<String> getAllQueue() {
-        return Arrays.asList(hignQueue(), mediumQueue(), lowQueue());
+        return Arrays.asList(getQueue(QueueType.HIGN), getQueue(QueueType.MEDIUM), getQueue(QueueType.LOW));
     }
 
     @Override
@@ -153,7 +138,8 @@ public class TaskContext implements ITaskContext {
 
     @Override
     public List<String> getAllKey() {
-        return Stream.of(hignQueue(), mediumQueue(), lowQueue(), resultQueue(), leaderLock(), leaderName(), masterConsumerLock(),
+        return Stream.of(getQueue(QueueType.HIGN), getQueue(QueueType.MEDIUM), getQueue(QueueType.LOW),
+                resultQueue(), leaderLock(), leaderName(), masterConsumerLock(),
                 slaveConsumerLock(), executeHash(), heartHash()).collect(Collectors.toList());
     }
 

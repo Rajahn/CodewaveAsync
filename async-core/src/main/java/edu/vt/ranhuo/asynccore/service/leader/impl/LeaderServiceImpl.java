@@ -1,6 +1,7 @@
 package edu.vt.ranhuo.asynccore.service.leader.impl;
 
 import edu.vt.ranhuo.asynccore.config.TaskContext;
+import edu.vt.ranhuo.asynccore.enums.QueueType;
 import edu.vt.ranhuo.asynccore.exceptions.HashPrefixException;
 import edu.vt.ranhuo.asynccore.lambda.ProcessLambda;
 import edu.vt.ranhuo.asynccore.service.leader.LeaderService;
@@ -110,10 +111,10 @@ public class LeaderServiceImpl implements LeaderService {
      *  若slave节点宕机, 则将执行中数据存储至高优队列最高优先级
      */
     public void acceptSlave(String value) {
-        double zmax = redissonUtils.zmax(context.hignQueue());
+        double zmax = redissonUtils.zmax(context.getQueue(QueueType.HIGN));
         context.deleteSplit(value)
-                .forEach((v) -> redissonUtils.zadd(context.hignQueue(), zmax, v));
-        log.warn("slave node downtime processing end, value: {}, score: {} to hignQueue: {}", value, zmax, context.hignQueue());
+                .forEach((v) -> redissonUtils.zadd(context.getQueue(QueueType.HIGN), zmax, v));
+        log.warn("slave node downtime processing end, value: {}, score: {} to hignQueue: {}", value, zmax, context.getQueue(QueueType.HIGN));
     }
 
 
