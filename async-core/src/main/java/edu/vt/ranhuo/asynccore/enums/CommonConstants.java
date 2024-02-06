@@ -38,7 +38,7 @@ public enum CommonConstants {
     public static final int FIFTH = 5;
     public static final int SIXTH = 6;
     public static final int SEVENTH = 7;
-    public static final int EIGHT = 7;
+    public static final int EIGHT = 8;
     public static final int TENTH = 10;
     public static final int ZERO = 0;
     public static final int END_INDEX = -1;

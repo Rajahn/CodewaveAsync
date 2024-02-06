@@ -43,7 +43,7 @@ public class LeaderServiceImpl implements LeaderService {
     public void heart() {
         final long timestamp = context.timestamp();
         redissonUtils.hset(context.heartHash(), nodeInfo, timestamp);
-        log.debug("send heart, hashkey: {}, nodeInfo: {}, timestamp: {}", context.heartHash(), nodeInfo, timestamp);
+        log.info("send heart, hashkey: {}, nodeInfo: {}, timestamp: {}", context.heartHash(), nodeInfo, timestamp);
     }
 
     @Override
@@ -75,7 +75,7 @@ public class LeaderServiceImpl implements LeaderService {
     private void listener() {
         Map<String, Long> heartMap = redissonUtils.hgetall(context.heartHash());
         long timestamp = context.timestamp();
-        log.debug("listen heart, leader: {}, redisKey:{}, heartMap: {}, timestamp: {}", redissonUtils.get(context.leaderName()),
+        log.info("listen heart, leader: {}, redisKey:{}, heartMap: {}, timestamp: {}", redissonUtils.get(context.leaderName()),
                 context.heartHash(), heartMap, timestamp);
         heartMap.forEach((k, v) -> {
             if (timestamp - v > context.expirationTime()) {
@@ -116,7 +116,7 @@ public class LeaderServiceImpl implements LeaderService {
         log.warn("slave node downtime processing end, value: {}, score: {} to hignQueue: {}", value, zmax, context.hignQueue());
     }
 
-    // TODO:需要包裹异常，因如果redis宕机异常，此线程不可中断，仍需发送心跳直到redis恢复;
+
     public void process(ProcessLambda lambda) {
         while (!stopper.get()) {
             lambda.process();
