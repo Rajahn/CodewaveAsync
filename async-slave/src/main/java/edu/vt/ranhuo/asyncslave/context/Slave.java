@@ -31,7 +31,6 @@ public class Slave implements ISlave<String> {
     @Override
     public Optional<String> consume() {
         List<String> allQueue = context.getAllQueue();
-        Collections.shuffle(allQueue); // 打乱队列顺序以实现公平性和负载均衡
         for (String queueName : allQueue) {
             // 为每个队列名称获取一个唯一的锁
             String lockKey = context.slaveConsumerLock(queueName);
