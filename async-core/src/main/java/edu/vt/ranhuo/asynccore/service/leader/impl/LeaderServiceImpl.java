@@ -111,10 +111,10 @@ public class LeaderServiceImpl implements LeaderService {
      *  若slave节点宕机, 则将执行中数据存储至高优队列最高优先级
      */
     public void acceptSlave(String value) {
-        double zmax = redissonUtils.zmax(context.getQueue(QueueType.HIGN));
+        double zmax = redissonUtils.zmax(context.getQueue(QueueType.ONE));
         context.deleteSplit(value)
-                .forEach((v) -> redissonUtils.zadd(context.getQueue(QueueType.HIGN), zmax, v));
-        log.warn("slave node downtime processing end, value: {}, score: {} to hignQueue: {}", value, zmax, context.getQueue(QueueType.HIGN));
+                .forEach((v) -> redissonUtils.zadd(context.getQueue(QueueType.ONE), zmax, v));
+        log.warn("slave node downtime processing end, value: {}, score: {} to hignQueue: {}", value, zmax, context.getQueue(QueueType.ONE));
     }
 
 

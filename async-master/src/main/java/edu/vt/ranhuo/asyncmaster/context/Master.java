@@ -28,6 +28,15 @@ public class Master implements IMaster<String> {
     }
 
     @Override
+    public void send(double score, String value) {
+        List<QueueType> allQueue = context.getAllQueueType();
+        Collections.shuffle(allQueue);
+        QueueType queue = allQueue.get(0);
+        context.getRedissonUtils().zadd(context.getQueue(queue), score, value);
+        log.info("master[{}] send finished, queue: {}, score: {}, value: {}", context.masterHashKey(), queue, score, value);
+    }
+
+    @Override
     public void send(QueueType queue, double score, String value) {
         context.getRedissonUtils().zadd(context.getQueue(queue), score, value);
         log.info("master[{}] send finished, queue: {}, score: {}, value: {}", context.masterHashKey(), queue, score, value);

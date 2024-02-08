@@ -8,6 +8,8 @@ import edu.vt.ranhuo.asynccore.service.task.TaskService;
 import edu.vt.ranhuo.asynccore.service.task.impl.TaskServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -29,7 +31,10 @@ public class Slave implements ISlave<String> {
     @Override
     public Optional<String> consume() {
         return context.getRedissonUtils().lock(context.slaveConsumerLock(), Optional.empty(), (t) -> {
-            for (String queueName : context.getAllQueue()) {
+            List<String> allQueue = context.getAllQueue();
+            Collections.shuffle(allQueue);
+            for (String queueName : allQueue) {
+                log.info("slave[{}] consume start, queue: {}", context.slaveHashKey(), queueName);
                 Optional<String> tValue = context.getRedissonUtils().zrpop(queueName);
                 if (tValue.isPresent()) {
                     service.sendExecuteQueue(context.slaveHashKey(), tValue.get());

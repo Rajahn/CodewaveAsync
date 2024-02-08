@@ -86,8 +86,8 @@ public class MasterTest {
 
     @Test
     public void delete() {
-        final String value = String.valueOf(QueueType.HIGN).concat(String.valueOf(FIRST));
-        log.info("delete value:{} finished, boolean: {}", value, master.delete(QueueType.HIGN, value));
+        final String value = String.valueOf(QueueType.ONE).concat(String.valueOf(FIRST));
+        log.info("delete value:{} finished, boolean: {}", value, master.delete(QueueType.ONE, value));
     }
 
     @Test
