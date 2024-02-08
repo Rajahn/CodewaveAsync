@@ -33,7 +33,7 @@ public interface ITaskContext {
 
     String masterConsumerLock();
 
-    String slaveConsumerLock();
+    String slaveConsumerLock(String queue);
 
     String executeHash();
 

@@ -30,10 +30,13 @@ public class Slave implements ISlave<String> {
     //从原队列中删除这个元素，这个操作由context.getRedissonUtils().zrem(queueName, tValue.get())完成
     @Override
     public Optional<String> consume() {
-        return context.getRedissonUtils().lock(context.slaveConsumerLock(), Optional.empty(), (t) -> {
-            List<String> allQueue = context.getAllQueue();
-            Collections.shuffle(allQueue);
-            for (String queueName : allQueue) {
+        List<String> allQueue = context.getAllQueue();
+        Collections.shuffle(allQueue); // 打乱队列顺序以实现公平性和负载均衡
+        for (String queueName : allQueue) {
+            // 为每个队列名称获取一个唯一的锁
+            String lockKey = context.slaveConsumerLock(queueName);
+            // 尝试获取锁并消费队列
+            Optional<String> lockedConsumeResult = context.getRedissonUtils().lock(lockKey, Optional.empty(), (t) -> {
                 log.info("slave[{}] consume start, queue: {}", context.slaveHashKey(), queueName);
                 Optional<String> tValue = context.getRedissonUtils().zrpop(queueName);
                 if (tValue.isPresent()) {
@@ -42,10 +45,16 @@ public class Slave implements ISlave<String> {
                     log.info("slave[{}] consume finished, queue: {}, value: {}", context.slaveHashKey(), queueName, tValue);
                     return tValue;
                 }
+                return Optional.empty();
+            });
+            // 如果当前队列成功消费了任务，则结束循环返回结果
+            if (lockedConsumeResult.isPresent()) {
+                return lockedConsumeResult;
             }
-            return Optional.empty();
-        });
+        }
+        return Optional.empty(); // 如果所有队列都没有任务，返回空的Optional
     }
+
 
     @Override
     public int getExecuteQueueSum() {

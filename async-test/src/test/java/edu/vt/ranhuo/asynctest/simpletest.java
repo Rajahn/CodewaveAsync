@@ -63,10 +63,10 @@ public class simpletest {
         master.send(1,"test-task3, hahaha");
 
         Thread.sleep(10000);
-//        slave.consume();
-//        slave.consume();
-//        slave.consume();
-//        slave.consume();
+        slave.consume();
+        slave.consume();
+        slave.consume();
+        slave.consume();
 
     }
 

@@ -120,8 +120,8 @@ public class TaskContext implements ITaskContext {
     }
 
     @Override
-    public String slaveConsumerLock() {
-        return redisFormat(prefix(), SLAVE_LOCK);
+    public String slaveConsumerLock(String queueName) {
+        return redisFormat(prefix(), SLAVE_LOCK+queueName);
     }
 
     @Override
@@ -151,7 +151,7 @@ public class TaskContext implements ITaskContext {
         allQueue.add(leaderLock());
         allQueue.add(leaderName());
         allQueue.add(masterConsumerLock());
-        allQueue.add(slaveConsumerLock());
+        allQueue.add(slaveConsumerLock(QUEUE_ONE));
         allQueue.add(executeHash());
         allQueue.add(heartHash());
         return allQueue;

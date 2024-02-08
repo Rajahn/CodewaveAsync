@@ -7,7 +7,7 @@ public enum CommonConstants {
     public static final String SLAVE_PREFIX = "slave";
 
     public static final String MASTER_LOCK = "lock:consume:master";
-    public static final String SLAVE_LOCK = "lock:consume:slave";
+    public static final String SLAVE_LOCK = "lock:consume:slave:";
 
     public static final String QUEUE_ONE = "queue:1";
 
