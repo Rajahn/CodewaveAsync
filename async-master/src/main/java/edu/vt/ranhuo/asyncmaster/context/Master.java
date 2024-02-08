@@ -8,6 +8,7 @@ import edu.vt.ranhuo.asynccore.service.leader.LeaderService;
 import edu.vt.ranhuo.asynccore.service.leader.impl.LeaderServiceImpl;
 import edu.vt.ranhuo.asynccore.service.task.TaskService;
 import edu.vt.ranhuo.asynccore.service.task.impl.TaskServiceImpl;
+import edu.vt.ranhuo.asynccore.utils.QueueSelector;
 import edu.vt.ranhuo.asynccore.utils.RedissonUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,19 +22,27 @@ public class Master implements IMaster<String> {
     private final LeaderService leaderService;
     private final TaskService<String, String> service;
 
+    private QueueSelector queueSelector;
+
     public Master(TaskConfig config) {
         this.context = new TaskContext(config);
         this.service = new TaskServiceImpl(context);
         this.leaderService = new LeaderServiceImpl(context, context.masterHashKey());
+        this.queueSelector = new QueueSelector(config.getQueueNums());
     }
 
     @Override
     public void send(double score, String value) {
-        List<QueueType> allQueue = context.getAllQueueType();
-        Collections.shuffle(allQueue);
-        QueueType queue = allQueue.get(0);
+        QueueType queue = mapIntToQueueType(queueSelector.getQueueForMaster(score));
         context.getRedissonUtils().zadd(context.getQueue(queue), score, value);
         log.info("master[{}] send finished, queue: {}, score: {}, value: {}", context.masterHashKey(), queue, score, value);
+    }
+
+    private static QueueType mapIntToQueueType(int queueNumber) {
+        if (queueNumber < 1 || queueNumber > 9) {
+            throw new IllegalArgumentException("Queue number must be between 1 and 9.");
+        }
+        return QueueType.values()[queueNumber - 1];
     }
 
     @Override
