@@ -2,6 +2,10 @@ package edu.vt.ranhuo.asynccore.utils;
 
 import java.util.Random;
 
+/**
+ * 队列选择器
+ * 以随机方式选择队列，但是根据score的不同，会有不同的权重
+ */
 public class QueueSelector {
 
     private final int num;

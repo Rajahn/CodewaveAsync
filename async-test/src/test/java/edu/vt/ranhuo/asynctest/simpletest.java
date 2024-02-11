@@ -58,9 +58,12 @@ public class simpletest {
         simpletest testAsync = new simpletest();
         IMaster master = testAsync.createMaster();
         ISlave slave = testAsync.createSlave();
+        ISlave slav2e = testAsync.createSlave();
         master.send(1,"test-task1, hahaha");
         master.send(1,"test-task2, hahaha");
         master.send(1,"test-task3, hahaha");
+
+        System.out.println(master.getActiveNodeInfo());
 
         Thread.sleep(10000);
         slave.consume();
