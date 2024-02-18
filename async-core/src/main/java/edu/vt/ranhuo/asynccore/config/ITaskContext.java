@@ -27,7 +27,10 @@ public interface ITaskContext {
 
     List<String> getAllQueue();
 
+    int getQueueNums();
+
     List<QueueType> getAllQueueType();
+
 
     String resultQueue();
 

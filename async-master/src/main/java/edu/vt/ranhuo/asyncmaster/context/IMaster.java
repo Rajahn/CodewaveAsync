@@ -16,7 +16,7 @@ public interface IMaster<T> extends Closeable {
 
     /**
      * 将任务存放至队列中
-     * 注意: 由于底层使用的是redis-sortSet, 故存入的任务字符串要保持唯一, 建议业务层面设置唯一任务Id
+     * 注意: 由于底层使用的是redis-sortSet, 故存入的任务字符串要保持唯一
      */
     void send(QueueType queue, double score, T value);
 

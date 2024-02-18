@@ -16,14 +16,16 @@ import java.util.stream.Collectors;
 public class ConstantHashUtil {
     private static RedissonUtils redissonUtils;
 
-    private static final String NODE_QUEUE_MAP_KEY = "nodeQueueMap"; // Redis key for node-to-queue map
+    private static final String NODE_QUEUE_MAP_KEY = "constanthash:nodeQueueMap"; // Redis key for node-to-queue map
+
+    private TreeMap<Long, String> hashRing; // 哈希环
 
     public ConstantHashUtil(RedissonClient redissonClient) {
         this.redissonUtils = RedissonUtils.getInstance(Optional.of(redissonClient));
     }
 
     public void initializeQueuesInHashRing(int queueNum) {
-        String hashRingKey = "hashRingQueues"; // Redis key for the hash ring
+        String hashRingKey = "constanthash:hashRingQueues"; // Redis key for the hash ring
 
         // Clear existing hash ring data
         redissonUtils.del(hashRingKey);
@@ -34,11 +36,71 @@ public class ConstantHashUtil {
             // Add queue ID with its hash value to the Redis sorted set
             redissonUtils.zadd(hashRingKey, hash, queueId);
         }
+        hashRing = new TreeMap<>();
+        distributeQueuesAmongWorkers(queueNum);
+    }
+
+    public void handleNodeFailure(String failedNode) {
+        // 从 Redis 中获取宕机节点负责的队列列表
+        String failedNodeQueues = (String) redissonUtils.hget(NODE_QUEUE_MAP_KEY, failedNode).orElse("[]");
+        List<Integer> queuesToReassign = Arrays.stream(failedNodeQueues.substring(1, failedNodeQueues.length() - 1).split(","))
+                .map(String::trim)
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+
+        // 删除宕机节点的条目
+        redissonUtils.hdel(NODE_QUEUE_MAP_KEY, failedNode);
+        //从hashring移除宕机节点及其虚拟节点
+        final int VIRTUAL_NODES = 10000;
+        for (int i = 0; i < VIRTUAL_NODES; i++) {
+            String virtualNodeName = failedNode + "#" + i;
+            long hash = hashFunction(virtualNodeName);
+            hashRing.remove(hash); // 从哈希环中删除虚拟节点
+        }
+        hashRing.remove(hashFunction(failedNode)); // 从哈希环中删除实际节点
+        // 重新分配宕机节点的队列
+        redistributeQueues(queuesToReassign);
+    }
+
+    private void redistributeQueues(List<Integer> queuesToReassign) {
+        for (Integer queue : queuesToReassign) {
+            long queueHash = hashFunction("queue" + queue);
+            String assignedNode = getAssignedWorkerNode(hashRing, queueHash);
+
+            // 获取当前节点已经负责的队列
+            Optional<String> currentQueuesString = redissonUtils.hget(NODE_QUEUE_MAP_KEY, assignedNode);
+            List<Integer> currentQueues = new ArrayList<>();
+            if (currentQueuesString.isPresent()) {
+                currentQueues = Arrays.stream(currentQueuesString.get().substring(1, currentQueuesString.get().length() - 1).split(","))
+                        .map(String::trim)
+                        .map(Integer::parseInt)
+                        .collect(Collectors.toList());
+            }
+
+            // 添加新分配的队列并更新节点到队列的映射关系
+            if (!currentQueues.contains(queue)) {
+                currentQueues.add(queue);
+                redissonUtils.hset(NODE_QUEUE_MAP_KEY, assignedNode, currentQueues.toString());
+            }
+        }
+    }
+
+    private TreeMap<Long, String> buildHashRing(Set<String> activeNodes) {
+        TreeMap<Long, String> hashRing = new TreeMap<>();
+        final int VIRTUAL_NODES = 10000;
+
+        for (String node : activeNodes) {
+            for (int i = 0; i < VIRTUAL_NODES; i++) {
+                String virtualNodeName = node + "#" + i;
+                long hash = hashFunction(virtualNodeName);
+                hashRing.put(hash, node);
+            }
+        }
+        return hashRing;
     }
 
     public void distributeQueuesAmongWorkers(int queueNum) {
         Set<String> activeNodes = getActiveNodeInfo();
-        TreeMap<Long, String> hashRing = new TreeMap<>(); // 哈希环
 
         final int VIRTUAL_NODES = 10000;
 
@@ -78,7 +140,7 @@ public class ConstantHashUtil {
     }
 
     private Set<String> getActiveNodeInfo() {
-        return new HashSet<>(Arrays.asList("worker2","worker1")); // 示例代码，需要根据实际情况获取
+        return new HashSet<>(Arrays.asList("worker2","worker1","worker3")); // 示例代码，需要根据实际情况获取
     }
 
 
@@ -88,7 +150,7 @@ public class ConstantHashUtil {
 
         if (!queuesString.isPresent()) {
             // 如果没有找到对应的分配关系，触发重新分配
-            distributeQueuesAmongWorkers(10); // 假设有10个队列，需要根据实际情况调整
+            distributeQueuesAmongWorkers(3); // 假设有10个队列，需要根据实际情况调整
             queuesString = redissonUtils.hget(NODE_QUEUE_MAP_KEY, workerName);
         }
 
@@ -121,9 +183,10 @@ public class ConstantHashUtil {
         final RedissonClient redissonClient = Redisson.create(Config.fromYAML(resource));
 
         ConstantHashUtil constantHashUtil = new ConstantHashUtil(redissonClient);
-        constantHashUtil.initializeQueuesInHashRing(3); // Initialize for 10 queues
-        constantHashUtil.distributeQueuesAmongWorkers(3); // Distribute queues among workers
+        constantHashUtil.initializeQueuesInHashRing(10); // Initialize for 10 queues
 
+        constantHashUtil.handleNodeFailure("worker1");
+        System.out.println(constantHashUtil.getQueuesForWorker("worker2"));
         Thread.sleep(1000); // Wait for the hash ring to be initialized
 
         //System.out.println(constantHashUtil.getQueuesForWorker("worker2"));

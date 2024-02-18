@@ -37,6 +37,8 @@ public enum CommonConstants {
     public static final String LEADER_LOCK = "leader:lock";
     public static final String LEADER_NAME = "leader:name";
 
+    public static final String REBALANCE_MAP = "rebalance:nodeQueueMap"; // Redis中保存节点分配关系的hash key
+
     public static final String REDIS_FORMAT = "%s%s";
     public static final String EMPTY_STRING = "";
     public static final String REDIS_SPLIT = ":";

@@ -99,6 +99,11 @@ public class TaskContext implements ITaskContext {
     }
 
     @Override
+    public int getQueueNums() {
+        return config.getQueueNums();
+    }
+
+    @Override
     public List<QueueType> getAllQueueType() {
         List<QueueType> list = new ArrayList<>();
         for(QueueType queueType : QueueType.getEnumsUpTo(config.getQueueNums())) {

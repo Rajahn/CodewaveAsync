@@ -4,12 +4,12 @@ import org.redisson.api.RedissonClient;
 
 public interface ITaskConfig {
     /**
-     *  redis前缀, master 和 slave 的前缀要保持一致, 否则无法消费任务
+     * redis前缀, master 和 slave 的前缀要保持一致, 否则无法消费任务
      */
     String getPrefix();
 
     /**
-     *  根据用户实际环境创建的redissonClient
+     * 根据用户实际环境创建的redissonClient
      */
     RedissonClient getRedissonClient();
 
@@ -23,5 +23,10 @@ public interface ITaskConfig {
      * 代表节点如果超过150s没有更新, 代表此节点宕机
      */
     int getExpirationCount();
+
+    /**
+     * 队列数量
+     */
+    int getQueueNums();
 
 }
