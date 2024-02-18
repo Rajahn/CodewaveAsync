@@ -1,7 +1,6 @@
 package edu.vt.ranhuo.asynccore.utils;
 
 import org.redisson.Redisson;
-import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 
@@ -13,10 +12,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static edu.vt.ranhuo.asynccore.enums.CommonConstants.REBALANCE_MAP;
+
 public class ConstantHashUtil {
     private static RedissonUtils redissonUtils;
 
-    private static final String NODE_QUEUE_MAP_KEY = "constanthash:nodeQueueMap"; // Redis key for node-to-queue map
+    //private static final String REBALANCE_MAP = "constanthash:nodeQueueMap"; // Redis key for node-to-queue map
 
     private TreeMap<Long, String> hashRing; // 哈希环
 
@@ -42,14 +43,14 @@ public class ConstantHashUtil {
 
     public void handleNodeFailure(String failedNode) {
         // 从 Redis 中获取宕机节点负责的队列列表
-        String failedNodeQueues = (String) redissonUtils.hget(NODE_QUEUE_MAP_KEY, failedNode).orElse("[]");
+        String failedNodeQueues = (String) redissonUtils.hget(REBALANCE_MAP, failedNode).orElse("[]");
         List<Integer> queuesToReassign = Arrays.stream(failedNodeQueues.substring(1, failedNodeQueues.length() - 1).split(","))
                 .map(String::trim)
                 .map(Integer::parseInt)
                 .collect(Collectors.toList());
 
         // 删除宕机节点的条目
-        redissonUtils.hdel(NODE_QUEUE_MAP_KEY, failedNode);
+        redissonUtils.hdel(REBALANCE_MAP, failedNode);
         //从hashring移除宕机节点及其虚拟节点
         final int VIRTUAL_NODES = 10000;
         for (int i = 0; i < VIRTUAL_NODES; i++) {
@@ -68,7 +69,7 @@ public class ConstantHashUtil {
             String assignedNode = getAssignedWorkerNode(hashRing, queueHash);
 
             // 获取当前节点已经负责的队列
-            Optional<String> currentQueuesString = redissonUtils.hget(NODE_QUEUE_MAP_KEY, assignedNode);
+            Optional<String> currentQueuesString = redissonUtils.hget(REBALANCE_MAP, assignedNode);
             List<Integer> currentQueues = new ArrayList<>();
             if (currentQueuesString.isPresent()) {
                 currentQueues = Arrays.stream(currentQueuesString.get().substring(1, currentQueuesString.get().length() - 1).split(","))
@@ -80,7 +81,7 @@ public class ConstantHashUtil {
             // 添加新分配的队列并更新节点到队列的映射关系
             if (!currentQueues.contains(queue)) {
                 currentQueues.add(queue);
-                redissonUtils.hset(NODE_QUEUE_MAP_KEY, assignedNode, currentQueues.toString());
+                redissonUtils.hset(REBALANCE_MAP, assignedNode, currentQueues.toString());
             }
         }
     }
@@ -125,7 +126,7 @@ public class ConstantHashUtil {
 
         // 将节点到队列的映射关系存储到Redis
         for (Map.Entry<String, List<Integer>> entry : nodeToQueuesMap.entrySet()) {
-            redissonUtils.hset(NODE_QUEUE_MAP_KEY, entry.getKey(), entry.getValue().toString());
+            redissonUtils.hset(REBALANCE_MAP, entry.getKey(), entry.getValue().toString());
         }
     }
 
@@ -146,12 +147,12 @@ public class ConstantHashUtil {
 
     // 工作节点查询自己负责的队列列表
     public List<Integer> getQueuesForWorker(String workerName) {
-        Optional<String> queuesString = redissonUtils.hget(NODE_QUEUE_MAP_KEY, workerName);
+        Optional<String> queuesString = redissonUtils.hget(REBALANCE_MAP, workerName);
 
         if (!queuesString.isPresent()) {
             // 如果没有找到对应的分配关系，触发重新分配
             distributeQueuesAmongWorkers(3); // 假设有10个队列，需要根据实际情况调整
-            queuesString = redissonUtils.hget(NODE_QUEUE_MAP_KEY, workerName);
+            queuesString = redissonUtils.hget(REBALANCE_MAP, workerName);
         }
 
         String queues = queuesString.orElse("[]");

@@ -39,6 +39,8 @@ public enum CommonConstants {
 
     public static final String REBALANCE_MAP = "rebalance:nodeQueueMap"; // Redis中保存节点分配关系的hash key
 
+    public static String HASHRING_KEY = "rebalance:hashRingQueues"; // Redis key for the hash ring
+
     public static final String REDIS_FORMAT = "%s%s";
     public static final String EMPTY_STRING = "";
     public static final String REDIS_SPLIT = ":";

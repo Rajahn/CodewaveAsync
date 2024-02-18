@@ -1,20 +1,21 @@
-package edu.vt.ranhuo.asynccore.utils;
+package edu.vt.ranhuo.asynccore.service.rebalance.impl;
+import edu.vt.ranhuo.asynccore.service.rebalance.Rebalance;
+import edu.vt.ranhuo.asynccore.utils.RedissonUtils;
 import org.redisson.api.RedissonClient;
 import java.util.*;
-import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static edu.vt.ranhuo.asynccore.enums.CommonConstants.REBALANCE_MAP;
 
-public class RebalanceUtil {
+public class RoundRebalanceImpl implements Rebalance {
 
-    private RedissonUtils redissonUtils;
+    private final RedissonUtils redissonUtils;
 
-    public RebalanceUtil(RedissonClient redissonClient) {
-        this.redissonUtils = RedissonUtils.getInstance(Optional.of(redissonClient));
+    public RoundRebalanceImpl(RedissonClient redissonClient) {
+        redissonUtils = RedissonUtils.getInstance(Optional.of(redissonClient));
     }
 
-    public void startReBalance(Supplier<Set<String>> activeNodesSupplier,int queueNum) {
-        Set<String> activeNodes = activeNodesSupplier.get();
+    public void startRebalance(Set<String> activeNodes,int queueNum) {
         //int queueNum = 25; // 总队列数量，需要根据实际情况获取
 
         redissonUtils.del(REBALANCE_MAP);
@@ -59,5 +60,26 @@ public class RebalanceUtil {
         }
     }
 
+    @Override
+    public void handleNodeFailure(String failedNodeName, Set<String> activeNodes, int queueNum) {
+        startRebalance(activeNodes,queueNum);
+    }
+
+    public List<Integer> getQueuesForWorker(String workerName,Set<String> activeNodes,int queueNum) {
+        Optional<String> queuesString = redissonUtils.hget(REBALANCE_MAP, workerName);
+
+        if (!queuesString.isPresent()) {
+            // 没有找到对应的分配关系，需要重新初始化
+            startRebalance(activeNodes,queueNum);
+            queuesString = redissonUtils.hget(REBALANCE_MAP, workerName);
+        }
+        // 解析队列编号并返回
+        String queues = queuesString.orElse("[]");
+
+        return Arrays.stream(queues.substring(1, queues.length() - 1).split(","))
+                .map(String::trim)
+                .map(Integer::parseInt)
+                .collect(Collectors.toList());
+    }
 }
 
