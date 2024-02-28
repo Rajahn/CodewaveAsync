@@ -31,7 +31,6 @@ public interface ITaskContext {
 
     List<QueueType> getAllQueueType();
 
-
     String resultQueue();
 
     String masterConsumerLock();

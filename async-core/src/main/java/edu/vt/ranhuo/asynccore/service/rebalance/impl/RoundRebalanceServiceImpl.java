@@ -1,5 +1,5 @@
 package edu.vt.ranhuo.asynccore.service.rebalance.impl;
-import edu.vt.ranhuo.asynccore.service.rebalance.Rebalance;
+import edu.vt.ranhuo.asynccore.service.rebalance.RebalanceService;
 import edu.vt.ranhuo.asynccore.utils.RedissonUtils;
 import org.redisson.api.RedissonClient;
 import java.util.*;
@@ -7,11 +7,11 @@ import java.util.stream.Collectors;
 
 import static edu.vt.ranhuo.asynccore.enums.CommonConstants.REBALANCE_MAP;
 
-public class RoundRebalanceImpl implements Rebalance {
+public class RoundRebalanceServiceImpl implements RebalanceService {
 
     private final RedissonUtils redissonUtils;
 
-    public RoundRebalanceImpl(RedissonClient redissonClient) {
+    public RoundRebalanceServiceImpl(RedissonClient redissonClient) {
         redissonUtils = RedissonUtils.getInstance(Optional.of(redissonClient));
     }
 

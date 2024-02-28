@@ -5,8 +5,8 @@ import edu.vt.ranhuo.asynccore.enums.QueueType;
 import edu.vt.ranhuo.asynccore.exceptions.HashPrefixException;
 import edu.vt.ranhuo.asynccore.lambda.ProcessLambda;
 import edu.vt.ranhuo.asynccore.service.leader.LeaderService;
-import edu.vt.ranhuo.asynccore.service.rebalance.Rebalance;
-import edu.vt.ranhuo.asynccore.service.rebalance.impl.RoundRebalanceImpl;
+import edu.vt.ranhuo.asynccore.service.rebalance.RebalanceService;
+import edu.vt.ranhuo.asynccore.service.rebalance.impl.RoundRebalanceServiceImpl;
 import edu.vt.ranhuo.asynccore.utils.RedissonUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +25,7 @@ public class LeaderServiceImpl implements LeaderService {
     private final Thread heartThread;
     private final Thread leaderThread;
     private final String nodeInfo;
-    private Rebalance rebalancer;
+    private RebalanceService rebalancer;
 
     public LeaderServiceImpl(TaskContext context, String nodeInfo) {
         this.nodeInfo = nodeInfo;
@@ -33,7 +33,7 @@ public class LeaderServiceImpl implements LeaderService {
         this.heartThread = new Thread(() -> process(this::heart));
         this.leaderThread = new Thread(this::seize);
         this.redissonUtils = RedissonUtils.getInstance(Optional.empty());
-        this.rebalancer = new RoundRebalanceImpl(redissonUtils.getRedisson());
+        this.rebalancer = new RoundRebalanceServiceImpl(redissonUtils.getRedisson());
         init();
     }
 
@@ -46,9 +46,14 @@ public class LeaderServiceImpl implements LeaderService {
     @Override
     public void heart() {
         final long timestamp = context.timestamp();
-        redissonUtils.hset(context.heartHash(), nodeInfo, timestamp);
-        log.info("send heart, hashkey: {}, nodeInfo: {}, timestamp: {}", context.heartHash(), nodeInfo, timestamp);
+        try {
+            redissonUtils.hset(context.heartHash(), nodeInfo, timestamp);
+            log.info("send heart, hashkey: {}, nodeInfo: {}, timestamp: {}", context.heartHash(), nodeInfo, timestamp);
+        } catch (Exception e) {
+            log.error("Failed to send heart due to Redis exception: {}", e.getMessage(), e);
+        }
     }
+
 
     @Override
     public void seize() {
@@ -60,10 +65,15 @@ public class LeaderServiceImpl implements LeaderService {
 
     @Override
     public void listen() {
-        redissonUtils.set(context.leaderName(), nodeInfo);
-        log.info("leader login was successful, key: {}, value: {}", context.leaderName(), nodeInfo);
-        process(this::listener);
+        try {
+            redissonUtils.set(context.leaderName(), nodeInfo);
+            log.info("leader login was successful, key: {}, value: {}", context.leaderName(), nodeInfo);
+            process(this::listener);
+        } catch (Exception e) {
+            log.error("Failed to listen due to Redis exception: {}", e.getMessage(), e);
+        }
     }
+
 
     @Override
     public List<Integer> getQueuesForWorker(String workerName) {

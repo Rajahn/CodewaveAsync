@@ -1,6 +1,6 @@
 package edu.vt.ranhuo.asynccore.service.rebalance.impl;
 
-import edu.vt.ranhuo.asynccore.service.rebalance.Rebalance;
+import edu.vt.ranhuo.asynccore.service.rebalance.RebalanceService;
 import edu.vt.ranhuo.asynccore.utils.RedissonUtils;
 import org.redisson.api.RedissonClient;
 
@@ -12,13 +12,13 @@ import java.util.stream.Collectors;
 
 import static edu.vt.ranhuo.asynccore.enums.CommonConstants.REBALANCE_MAP;
 
-public class ConstantHashRebalanceImpl implements Rebalance {
+public class ConstantHashRebalanceServiceImpl implements RebalanceService {
 
     private final RedissonUtils redissonUtils;
 
     private TreeMap<Long, String> hashRing; // 哈希环
 
-    public ConstantHashRebalanceImpl(RedissonClient redissonClient) {
+    public ConstantHashRebalanceServiceImpl(RedissonClient redissonClient) {
         redissonUtils = RedissonUtils.getInstance(Optional.of(redissonClient));
         hashRing = new TreeMap<>();
     }
