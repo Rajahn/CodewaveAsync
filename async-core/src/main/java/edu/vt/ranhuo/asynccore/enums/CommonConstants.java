@@ -41,6 +41,10 @@ public enum CommonConstants {
 
     public static String HASHRING_KEY = "rebalance:hashRingQueues"; // Redis key for the hash ring
 
+    public static final String ROUND_ROBIN = "round-robin";
+
+    public static final String CONSISTENT_HASH = "consistent-hash";
+
     public static final String REDIS_FORMAT = "%s%s";
     public static final String EMPTY_STRING = "";
     public static final String REDIS_SPLIT = ":";

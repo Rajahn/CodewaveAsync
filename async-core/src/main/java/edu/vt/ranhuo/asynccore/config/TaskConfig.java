@@ -21,6 +21,9 @@ public class TaskConfig implements ITaskConfig{
 
     @Builder.Default
     private int queueNums = QUEUE_NUMS;
+
+    @Builder.Default
+    private String rebalanceStrategy = ROUND_ROBIN;
     @Override
     public int getExpirationCount() { //不能小于3
         return Math.max(expirationCount, MIN_EXPIRATION_COUNT);

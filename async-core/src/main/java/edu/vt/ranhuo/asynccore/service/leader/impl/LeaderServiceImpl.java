@@ -6,6 +6,7 @@ import edu.vt.ranhuo.asynccore.exceptions.HashPrefixException;
 import edu.vt.ranhuo.asynccore.lambda.ProcessLambda;
 import edu.vt.ranhuo.asynccore.service.leader.LeaderService;
 import edu.vt.ranhuo.asynccore.service.rebalance.RebalanceService;
+import edu.vt.ranhuo.asynccore.service.rebalance.RebalanceStrategyFactory;
 import edu.vt.ranhuo.asynccore.service.rebalance.impl.RoundRebalanceServiceImpl;
 import edu.vt.ranhuo.asynccore.utils.RedissonUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +34,7 @@ public class LeaderServiceImpl implements LeaderService {
         this.heartThread = new Thread(() -> process(this::heart));
         this.leaderThread = new Thread(this::seize);
         this.redissonUtils = RedissonUtils.getInstance(Optional.empty());
-        this.rebalancer = new RoundRebalanceServiceImpl(redissonUtils.getRedisson());
+        this.rebalancer = RebalanceStrategyFactory.getRebalanceStrategy(context.getConfig().getRebalanceStrategy(), redissonUtils.getRedisson());
         init();
     }
 
