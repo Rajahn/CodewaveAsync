@@ -4,18 +4,22 @@ import java.util.Random;
 
 /**
  * 队列选择器
- * 以随机方式选择队列，但是根据score的不同，会有不同的权重
+ * 1 以循环方式选择队列
+ * 2 以随机方式选择队列，根据score的不同，会有不同的权重
  */
 public class QueueSelector {
 
     private final int num;
     private final Random random;
 
+    private int currentQueue;
+
     public QueueSelector(int num) {
         if (num < 1 || num > 9) {
             throw new IllegalArgumentException("num must be between 1 and 9.");
         }
         this.num = num;
+        this.currentQueue = 0; // 初始化为0，下一次调用时返回1号队列
         this.random = new Random();
     }
 
@@ -36,6 +40,11 @@ public class QueueSelector {
     public int getQueueForSlave() {
         // 为slave优先返回序号小的队列
         return 1 + random.nextInt(num);
+    }
+
+    public int getNextQueue() {
+        currentQueue = (currentQueue % num) + 1; // 更新当前队列序号
+        return currentQueue;
     }
 
     private int weightedRandomQueue(int[] weights) {

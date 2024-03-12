@@ -65,6 +65,7 @@ public class RoundRebalanceServiceImpl implements RebalanceService {
     @Override
     public void handleNodeFailure(String failedNodeName, Set<String> activeNodes, int queueNum) {
         startRebalance(activeNodes,queueNum);
+        redissonUtils.hdel(REBALANCE_MAP,failedNodeName);
     }
 
     public List<Integer> getQueuesForWorker(String workerName,Set<String> activeNodes,int queueNum) {

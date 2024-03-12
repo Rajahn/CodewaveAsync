@@ -52,6 +52,7 @@ public class ConstantHashRebalanceServiceImpl implements RebalanceService {
     @Override
     public void handleNodeFailure(String failedNodeName, Set<String> activeNodes, int queueNum) {
         handleNodeFailure(failedNodeName);
+        redissonUtils.hdel(REBALANCE_MAP,failedNodeName);
     }
 
 

@@ -33,7 +33,7 @@ public class Master implements IMaster<String> {
 
     @Override
     public void send(double score, String value) {
-        QueueType queue = mapIntToQueueType(queueSelector.getQueueForMaster(score));
+        QueueType queue = mapIntToQueueType(queueSelector.getNextQueue());
         context.getRedissonUtils().zadd(context.getQueue(queue), score, value);
         log.info("master[{}] send finished, queue: {}, score: {}, value: {}", context.masterHashKey(), queue, score, value);
     }

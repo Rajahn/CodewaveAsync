@@ -9,14 +9,14 @@ import java.util.*;
 
 public interface IMaster<T> extends Closeable {
     /**
-     * 将任务存放至随机队列中
+     * 将任务循环投放至全部队列中
      */
     void send(double score, T value);
 
 
     /**
      * 将任务存放至队列中
-     * 注意: 由于底层使用的是redis-sortSet, 故存入的任务字符串要保持唯一
+     * 注意: 由于底层使用的是zset, 故存入的任务字符串要保持唯一
      */
     void send(QueueType queue, double score, T value);
 
@@ -98,7 +98,7 @@ public interface IMaster<T> extends Closeable {
     Map<QueueType, Integer> getQueueSize();
 
     /**
-     * 结束result任务, 此操作将删除Master执行副本中的元数据, 请确保业务层面处理成功后调动此函数
+     * 结束result任务, 此操作将删除Master执行副本中的元数据, 确保业务层面处理成功后调动此函数
      *
      * @return
      */
@@ -121,7 +121,6 @@ public interface IMaster<T> extends Closeable {
 
     /**
      * 关闭接口, 此接口只会关闭master节点的心跳发送和leader竞争, 关闭后用户依然可以调用send||consume接口
-     * 故建议用户在外界设置关闭钩子时调用此接口;
      */
     void close();
 
