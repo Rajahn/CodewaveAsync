@@ -25,7 +25,10 @@ public class ConstantHashRebalanceServiceImpl implements RebalanceService {
 
     @Override
     public void startRebalance(Set<String> activeNodes, int queueNum) {
-        redissonUtils.del(REBALANCE_MAP);
+        Map<String, String> existingKeys = redissonUtils.hgetall(REBALANCE_MAP);
+        for (String key : existingKeys.keySet()) {
+            redissonUtils.hset(REBALANCE_MAP, key, "[]");
+        }
         distributeQueuesAmongWorkers(activeNodes, queueNum);
     }
 

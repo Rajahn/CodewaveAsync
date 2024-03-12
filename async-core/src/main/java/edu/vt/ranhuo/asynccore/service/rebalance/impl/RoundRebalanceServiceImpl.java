@@ -16,9 +16,11 @@ public class RoundRebalanceServiceImpl implements RebalanceService {
     }
 
     public void startRebalance(Set<String> activeNodes,int queueNum) {
-        //int queueNum = 25; // 总队列数量，需要根据实际情况获取
-
-        redissonUtils.del(REBALANCE_MAP);
+        // 获取现有的key并清空对应的值, 避免触发多次缓存重建
+        Map<String, String> existingKeys = redissonUtils.hgetall(REBALANCE_MAP);
+        for (String key : existingKeys.keySet()) {
+            redissonUtils.hset(REBALANCE_MAP, key, "[]");
+        }
 
         List<String> nodes = new ArrayList<>(activeNodes);
         int nodeNum = nodes.size();
