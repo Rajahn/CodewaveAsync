@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Slf4j
 public class Slave implements ISlave<String> {
@@ -61,11 +62,8 @@ public class Slave implements ISlave<String> {
         if(queuesForWorker.size()== 0){
             return Optional.empty();
         }
-        if(queuesForWorker.size()>1){
-            return consume();
-        }
-
-        QueueType queue = QueueSelector.mapIntToQueueType(queuesForWorker.get(0));
+        // todo 在队列数比worker数少的情况下，需要加锁获取任务
+        QueueType queue = QueueSelector.mapIntToQueueType(queuesForWorker.get(new Random().nextInt(queuesForWorker.size())));
         String queueName = context.getQueue(queue);
 
         // 直接消费队列

@@ -10,7 +10,8 @@ public interface ISlave<T> extends Closeable {
      */
     Optional<T> consume();
     /**
-     * 无锁消费，获取当前节点所负责的队列中的任务，但当当前节点负责的队列数多于1 时，采用consume()方法
+     * 无锁消费，获取当前节点所负责的队列中的任务
+     * 目前获取队列的方式是随机选择，有待优化
      */
     Optional<T> consume_unlock();
 
