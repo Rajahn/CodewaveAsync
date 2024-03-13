@@ -10,9 +10,7 @@ import edu.vt.ranhuo.asynccore.service.task.impl.TaskServiceImpl;
 import edu.vt.ranhuo.asynccore.utils.QueueSelector;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 @Slf4j
 public class Slave implements ISlave<String> {
@@ -34,6 +32,7 @@ public class Slave implements ISlave<String> {
     @Override
     public Optional<String> consume() {
         List<String> allQueue = context.getAllQueue();
+        Collections.shuffle(allQueue);
         for (String queueName : allQueue) {
             // 为每个队列名称获取一个唯一的锁
             String lockKey = context.slaveConsumerLock(queueName);
@@ -58,23 +57,29 @@ public class Slave implements ISlave<String> {
     }
 
     public Optional<String> consume_unlock() {
+        // todo 在队列数比worker数少的情况下，需要加锁获取任务
         List<Integer> queuesForWorker = leaderService.getQueuesForWorker(context.slaveHashKey());
         if(queuesForWorker.size()== 0){
             return Optional.empty();
         }
-        // todo 在队列数比worker数少的情况下，需要加锁获取任务
-        QueueType queue = QueueSelector.mapIntToQueueType(queuesForWorker.get(new Random().nextInt(queuesForWorker.size())));
-        String queueName = context.getQueue(queue);
-
-        // 直接消费队列
-        Optional<String> consumeResult = context.getRedissonUtils().zrpop(queueName);
-        if (consumeResult.isPresent()) {
-            log.info("slave[{}] consume start, queue: {}", context.slaveHashKey(), queueName);
-            service.sendExecuteQueue(context.slaveHashKey(), consumeResult.get());
-            log.info("slave[{}] consume finished, queue: {}, value: {}", context.slaveHashKey(), queueName, consumeResult);
-            return consumeResult;
+        List<String> allQueue =  new ArrayList<>();
+        for (int i = 0; i < queuesForWorker.size(); i++) {
+            QueueType queue = QueueSelector.mapIntToQueueType(queuesForWorker.get(i));
+            String queueName = context.getQueue(queue);
+            allQueue.add(queueName);
         }
-        return Optional.empty();
+        Collections.shuffle(allQueue);
+
+        for (String queueName : allQueue) {
+            Optional<String> consumeResult = context.getRedissonUtils().zrpop(queueName);
+            if (consumeResult.isPresent()) {
+                log.info("slave[{}] consume start, queue: {}", context.slaveHashKey(), queueName);
+                service.sendExecuteQueue(context.slaveHashKey(), consumeResult.get());
+                log.info("slave[{}] consume finished, queue: {}, value: {}", context.slaveHashKey(), queueName, consumeResult);
+                return consumeResult;
+            }
+        }
+        return Optional.empty(); // 如果所有队列都没有任务，返回空的Optional
     }
 
     @Override
