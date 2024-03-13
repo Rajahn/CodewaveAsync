@@ -23,15 +23,11 @@ public interface ITaskContext {
 
     String leaderName();
 
-    String hignQueue();
-
-    String mediumQueue();
-
-    String lowQueue();
-
     String getQueue(QueueType queueType);
 
     List<String> getAllQueue();
+
+    int getQueueNums();
 
     List<QueueType> getAllQueueType();
 
@@ -39,7 +35,7 @@ public interface ITaskContext {
 
     String masterConsumerLock();
 
-    String slaveConsumerLock();
+    String slaveConsumerLock(String queue);
 
     String executeHash();
 

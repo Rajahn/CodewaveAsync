@@ -3,6 +3,7 @@ package edu.vt.ranhuo.asynccore.service.leader;
 import edu.vt.ranhuo.asynccore.inspect.Initialize;
 
 import java.io.Closeable;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -21,6 +22,8 @@ public interface LeaderService extends Initialize, Closeable {
      * 节点监听接口
      */
     void listen();
+
+    List<Integer> getQueuesForWorker(String workerId);
 
     /**
      * 获取所有活跃节点

@@ -8,6 +8,7 @@ import edu.vt.ranhuo.asynccore.service.leader.LeaderService;
 import edu.vt.ranhuo.asynccore.service.leader.impl.LeaderServiceImpl;
 import edu.vt.ranhuo.asynccore.service.task.TaskService;
 import edu.vt.ranhuo.asynccore.service.task.impl.TaskServiceImpl;
+import edu.vt.ranhuo.asynccore.utils.QueueSelector;
 import edu.vt.ranhuo.asynccore.utils.RedissonUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,10 +22,20 @@ public class Master implements IMaster<String> {
     private final LeaderService leaderService;
     private final TaskService<String, String> service;
 
+    private QueueSelector queueSelector;
+
     public Master(TaskConfig config) {
         this.context = new TaskContext(config);
         this.service = new TaskServiceImpl(context);
         this.leaderService = new LeaderServiceImpl(context, context.masterHashKey());
+        this.queueSelector = new QueueSelector(config.getQueueNums());
+    }
+
+    @Override
+    public void send(double score, String value) {
+        QueueType queue = QueueSelector.mapIntToQueueType(queueSelector.getNextQueue());
+        context.getRedissonUtils().zadd(context.getQueue(queue), score, value);
+        log.info("master[{}] send finished, queue: {}, score: {}, value: {}", context.masterHashKey(), queue, score, value);
     }
 
     @Override

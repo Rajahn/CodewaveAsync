@@ -6,8 +6,6 @@ import lombok.Getter;
 
 import java.lang.management.ManagementFactory;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static edu.vt.ranhuo.asynccore.enums.CommonConstants.*;
 
@@ -20,8 +18,14 @@ public class TaskContext implements ITaskContext {
 
     public TaskContext(TaskConfig config) {
         this.config = config;
-        this.pidHostname = ManagementFactory.getRuntimeMXBean().getName();
+        this.pidHostname = ManagementFactory.getRuntimeMXBean().getName()+getShortUUID();
         this.redissonUtils = RedissonUtils.getInstance(Optional.ofNullable(config.getRedissonClient()));
+    }
+
+    private static String getShortUUID() {
+        int hashCode = Math.abs(UUID.randomUUID().hashCode());
+        String shortUUID = String.valueOf(hashCode).substring(0, 4);
+        return shortUUID;
     }
 
     @Override
@@ -87,33 +91,31 @@ public class TaskContext implements ITaskContext {
     }
 
     @Override
-    public String hignQueue() {
-        return redisFormat(prefix(), HIGN_QUEUE);
-    }
-
-    @Override
-    public String mediumQueue() {
-        return redisFormat(prefix(), MEDIUM_QUEUE);
-    }
-
-    @Override
-    public String lowQueue() {
-        return redisFormat(prefix(), LOW_QUEUE);
-    }
-
-    @Override
     public String getQueue(QueueType queueType) {
         return redisFormat(prefix(), queueType.getQueue());
     }
 
     @Override
     public List<String> getAllQueue() {
-        return Arrays.asList(hignQueue(), mediumQueue(), lowQueue());
+        List<String> list = new ArrayList<>();
+        for(QueueType queueType : QueueType.getEnumsUpTo(config.getQueueNums())) {
+            list.add(getQueue(queueType));
+        }
+        return list;
+    }
+
+    @Override
+    public int getQueueNums() {
+        return config.getQueueNums();
     }
 
     @Override
     public List<QueueType> getAllQueueType() {
-        return Arrays.asList(QueueType.HIGN, QueueType.MEDIUM, QueueType.LOW);
+        List<QueueType> list = new ArrayList<>();
+        for(QueueType queueType : QueueType.getEnumsUpTo(config.getQueueNums())) {
+            list.add(queueType);
+        }
+        return list;
     }
 
     @Override
@@ -127,8 +129,8 @@ public class TaskContext implements ITaskContext {
     }
 
     @Override
-    public String slaveConsumerLock() {
-        return redisFormat(prefix(), SLAVE_LOCK);
+    public String slaveConsumerLock(String queueName) {
+        return redisFormat(prefix(), SLAVE_LOCK+queueName);
     }
 
     @Override
@@ -153,8 +155,15 @@ public class TaskContext implements ITaskContext {
 
     @Override
     public List<String> getAllKey() {
-        return Stream.of(hignQueue(), mediumQueue(), lowQueue(), resultQueue(), leaderLock(), leaderName(), masterConsumerLock(),
-                slaveConsumerLock(), executeHash(), heartHash()).collect(Collectors.toList());
+        List<String> allQueue = getAllQueue();
+        allQueue.add(resultQueue());
+        allQueue.add(leaderLock());
+        allQueue.add(leaderName());
+        allQueue.add(masterConsumerLock());
+        allQueue.add(slaveConsumerLock(QUEUE_ONE));
+        allQueue.add(executeHash());
+        allQueue.add(heartHash());
+        return allQueue;
     }
 
     /**

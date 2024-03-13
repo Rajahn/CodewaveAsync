@@ -5,10 +5,14 @@ import java.util.Optional;
 
 public interface ISlave<T> extends Closeable {
     /**
-     * 消费Queue中数据, 此函数将从高到低消费待执行队列, 若列表无数据则返回空Optional
-     * 注意: 分布式服务需使用分布式锁
+     * 每次调用消费Queue中数据, 若列表无数据则返回空Optional
+     * 注意: 因为是轮流从多个队列中获取数据, 所以需要使用分布式锁
      */
     Optional<T> consume();
+    /**
+     * 无锁消费，获取当前节点所负责的队列中的任务，但当当前节点负责的队列数多于1 时，采用consume()方法
+     */
+    Optional<T> consume_unlock();
 
     /**
      * 获取正在执行的队列任务数

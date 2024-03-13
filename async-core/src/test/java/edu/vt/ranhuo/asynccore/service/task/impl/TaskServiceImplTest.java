@@ -39,7 +39,7 @@ public class TaskServiceImplTest {
         service = new TaskServiceImpl(context);
     }
 
-    @After
+    //@After
     public void tearDown() {
         clean();
     }

@@ -9,8 +9,14 @@ import java.util.*;
 
 public interface IMaster<T> extends Closeable {
     /**
-     * 将任务存放至队列中, 支持hign/medium/low三种优先级队列, 支持同一任务优先级修改
-     * 注意: 由于底层使用的是redis-sortSet, 故存入的任务字符串要保持唯一, 建议业务层面设置唯一任务Id
+     * 将任务循环投放至全部队列中
+     */
+    void send(double score, T value);
+
+
+    /**
+     * 将任务存放至队列中
+     * 注意: 由于底层使用的是zset, 故存入的任务字符串要保持唯一
      */
     void send(QueueType queue, double score, T value);
 
@@ -21,7 +27,7 @@ public interface IMaster<T> extends Closeable {
     Optional<T> consume();
 
     /**
-     * 在指定优先级队列中查找并删除任务, 此函数只会删除等待队列中的任务, 若slave节点已经获取到任务则无法删除, 并且在consume函数中依旧可以获取到删除任务的返回结果
+     * 在指定队列中查找并删除任务, 此函数只会删除等待队列中的任务, 若slave节点已经获取到任务则无法删除, 并且在consume函数中依旧可以获取到删除任务的返回结果
      * 建议用户在业务层面控制, 例如: 将删除的任务在数据库设置为failed状态, 当consume获取删除任务后判断数据库任务状态如果为failed则无需处理结果;
      */
     Status delete(QueueType queue, T value);
@@ -92,7 +98,7 @@ public interface IMaster<T> extends Closeable {
     Map<QueueType, Integer> getQueueSize();
 
     /**
-     * 结束result任务, 此操作将删除Master执行副本中的元数据, 请确保业务层面处理成功后调动此函数
+     * 结束result任务, 此操作将删除Master执行副本中的元数据, 确保业务层面处理成功后调动此函数
      *
      * @return
      */
@@ -115,7 +121,6 @@ public interface IMaster<T> extends Closeable {
 
     /**
      * 关闭接口, 此接口只会关闭master节点的心跳发送和leader竞争, 关闭后用户依然可以调用send||consume接口
-     * 故建议用户在外界设置关闭钩子时调用此接口;
      */
     void close();
 
