@@ -16,13 +16,14 @@ import org.redisson.config.Config;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 public class simpletest {
     private final AtomicBoolean stopper = new AtomicBoolean();
     private final Random rand = new Random();
-    private final String prefix = "test:codewave";
+    private final String prefix = "simpletest:codewave";
     private final long heartbeatInterval = 10 * 1000;
     private final int expirationCount = 3;
     private TaskContext context;
@@ -58,16 +59,27 @@ public class simpletest {
         simpletest testAsync = new simpletest();
         IMaster master = testAsync.createMaster();
         ISlave slave = testAsync.createSlave();
-        ISlave slav2e = testAsync.createSlave();
+        ISlave slave2 = testAsync.createSlave();
         master.send(1,"test-task1, hahaha");
         master.send(1,"test-task2, hahaha");
         master.send(1,"test-task3, hahaha");
 
         System.out.println(master.getActiveNodeInfo());
 
-        Thread.sleep(10000);
-        slave.consume();
-        slave.consume();
+        Optional<String> ops =  slave.consume_unlock();
+        slave2.consume_unlock();
+        if(ops.isPresent()){
+            String task = ops.get();
+            System.out.println(task);
+            slave.commit("task finish",task);
+        }else {
+            System.out.println("no task");
+        }
+
+        Thread.sleep(100000);
+
+        slave.consume_unlock();
+
         slave.consume();
         slave.consume();
 

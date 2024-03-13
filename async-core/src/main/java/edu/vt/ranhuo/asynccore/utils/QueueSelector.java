@@ -1,5 +1,7 @@
 package edu.vt.ranhuo.asynccore.utils;
 
+import edu.vt.ranhuo.asynccore.enums.QueueType;
+
 import java.util.Random;
 
 /**
@@ -21,6 +23,13 @@ public class QueueSelector {
         this.num = num;
         this.currentQueue = 0; // 初始化为0，下一次调用时返回1号队列
         this.random = new Random();
+    }
+
+    public static QueueType mapIntToQueueType(int queueNumber) {
+        if (queueNumber < 1 || queueNumber > 9) {
+            throw new IllegalArgumentException("Queue number must be between 1 and 9.");
+        }
+        return QueueType.values()[queueNumber - 1];
     }
 
     public int getQueueForMaster(double timestamp) {

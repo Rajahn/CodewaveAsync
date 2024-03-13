@@ -81,6 +81,7 @@ public class RoundRebalanceServiceImpl implements RebalanceService {
 
         return Arrays.stream(queues.substring(1, queues.length() - 1).split(","))
                 .map(String::trim)
+                .filter(s -> !s.isEmpty()) // 过滤掉空字符串
                 .map(Integer::parseInt)
                 .collect(Collectors.toList());
     }

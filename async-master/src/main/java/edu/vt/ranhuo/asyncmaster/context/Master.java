@@ -33,16 +33,9 @@ public class Master implements IMaster<String> {
 
     @Override
     public void send(double score, String value) {
-        QueueType queue = mapIntToQueueType(queueSelector.getNextQueue());
+        QueueType queue = QueueSelector.mapIntToQueueType(queueSelector.getNextQueue());
         context.getRedissonUtils().zadd(context.getQueue(queue), score, value);
         log.info("master[{}] send finished, queue: {}, score: {}, value: {}", context.masterHashKey(), queue, score, value);
-    }
-
-    private static QueueType mapIntToQueueType(int queueNumber) {
-        if (queueNumber < 1 || queueNumber > 9) {
-            throw new IllegalArgumentException("Queue number must be between 1 and 9.");
-        }
-        return QueueType.values()[queueNumber - 1];
     }
 
     @Override

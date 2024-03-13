@@ -2,13 +2,14 @@ package edu.vt.ranhuo.asyncslave.context;
 
 import edu.vt.ranhuo.asynccore.config.TaskConfig;
 import edu.vt.ranhuo.asynccore.config.TaskContext;
+import edu.vt.ranhuo.asynccore.enums.QueueType;
 import edu.vt.ranhuo.asynccore.service.leader.LeaderService;
 import edu.vt.ranhuo.asynccore.service.leader.impl.LeaderServiceImpl;
 import edu.vt.ranhuo.asynccore.service.task.TaskService;
 import edu.vt.ranhuo.asynccore.service.task.impl.TaskServiceImpl;
+import edu.vt.ranhuo.asynccore.utils.QueueSelector;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,6 +29,7 @@ public class Slave implements ISlave<String> {
     //如果弹出的元素存在（即Optional<String>不为空），这个方法会执行以下操作：
     //将这个元素添加到执行队列中，这个操作由service.sendExecuteQueue(context.slaveHashKey(), tValue.get())完成。
     //从原队列中删除这个元素，这个操作由context.getRedissonUtils().zrem(queueName, tValue.get())完成
+    // TODO: lua脚本优化 取任务-存入执行队列的过程
     @Override
     public Optional<String> consume() {
         List<String> allQueue = context.getAllQueue();
@@ -54,6 +56,28 @@ public class Slave implements ISlave<String> {
         return Optional.empty(); // 如果所有队列都没有任务，返回空的Optional
     }
 
+    public Optional<String> consume_unlock() {
+        List<Integer> queuesForWorker = leaderService.getQueuesForWorker(context.slaveHashKey());
+        if(queuesForWorker.size()== 0){
+            return Optional.empty();
+        }
+        if(queuesForWorker.size()>1){
+            return consume();
+        }
+
+        QueueType queue = QueueSelector.mapIntToQueueType(queuesForWorker.get(0));
+        String queueName = context.getQueue(queue);
+
+        // 直接消费队列
+        Optional<String> consumeResult = context.getRedissonUtils().zrpop(queueName);
+        if (consumeResult.isPresent()) {
+            log.info("slave[{}] consume start, queue: {}", context.slaveHashKey(), queueName);
+            service.sendExecuteQueue(context.slaveHashKey(), consumeResult.get());
+            log.info("slave[{}] consume finished, queue: {}, value: {}", context.slaveHashKey(), queueName, consumeResult);
+            return consumeResult;
+        }
+        return Optional.empty();
+    }
 
     @Override
     public int getExecuteQueueSum() {

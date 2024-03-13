@@ -18,8 +18,14 @@ public class TaskContext implements ITaskContext {
 
     public TaskContext(TaskConfig config) {
         this.config = config;
-        this.pidHostname = ManagementFactory.getRuntimeMXBean().getName();
+        this.pidHostname = ManagementFactory.getRuntimeMXBean().getName()+getShortUUID();
         this.redissonUtils = RedissonUtils.getInstance(Optional.ofNullable(config.getRedissonClient()));
+    }
+
+    private static String getShortUUID() {
+        int hashCode = Math.abs(UUID.randomUUID().hashCode());
+        String shortUUID = String.valueOf(hashCode).substring(0, 4);
+        return shortUUID;
     }
 
     @Override
