@@ -240,6 +240,10 @@ public class RedissonUtils {
         return result;
     }
 
+    public RTransaction createTransaction() {
+        return redisson.createTransaction(null);
+    }
+
     public static final class ScoredEntryEx<V> {
         private final Double score;
         private final V value;

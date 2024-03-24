@@ -1,5 +1,7 @@
 package edu.vt.ranhuo.asynccore.service.task;
 
+import org.redisson.api.RTransaction;
+
 public interface TaskService<K,V> {
     /**
      * 将数据存储放至执行队列
@@ -8,6 +10,8 @@ public interface TaskService<K,V> {
      * @param t 任务
      */
     void sendExecuteQueue(K hashKey, V t);
+
+    void sendExecuteQueue(RTransaction transaction, K hashKey, V t);
 
     /**
      * 删除执行队列中的任务

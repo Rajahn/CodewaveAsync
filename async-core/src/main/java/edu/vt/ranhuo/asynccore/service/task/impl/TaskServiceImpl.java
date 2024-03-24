@@ -4,6 +4,7 @@ import edu.vt.ranhuo.asynccore.config.ITaskContext;
 import edu.vt.ranhuo.asynccore.service.task.TaskService;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.redisson.api.RTransaction;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,14 @@ public class TaskServiceImpl implements TaskService<String, String> {
         Optional<String> oldHashValue = context.getRedissonUtils().hget(context.executeHash(), hashKey);
         String hashValue = context.addSplit(oldHashValue, value);
         context.getRedissonUtils().hset(context.executeHash(), hashKey, hashValue);
+        log.debug("TaskService:sendExecuteQueue, executeHash: {}, hashKey: {}, value: {}, oldHashValue: {}, newHashValue: {}",
+                context.executeHash(), hashKey, value, oldHashValue, hashValue);
+    }
+
+    public void sendExecuteQueue(RTransaction transaction,String hashKey, String value) {
+        Optional<String> oldHashValue = context.getRedissonUtils().hget(context.executeHash(), hashKey);
+        String hashValue = context.addSplit(oldHashValue, value);
+        transaction.getMap(context.executeHash()).fastPut(hashKey, hashValue);
         log.debug("TaskService:sendExecuteQueue, executeHash: {}, hashKey: {}, value: {}, oldHashValue: {}, newHashValue: {}",
                 context.executeHash(), hashKey, value, oldHashValue, hashValue);
     }

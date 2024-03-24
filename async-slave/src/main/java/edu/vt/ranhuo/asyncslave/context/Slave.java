@@ -9,6 +9,7 @@ import edu.vt.ranhuo.asynccore.service.task.TaskService;
 import edu.vt.ranhuo.asynccore.service.task.impl.TaskServiceImpl;
 import edu.vt.ranhuo.asynccore.utils.QueueSelector;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RTransaction;
 
 import java.util.*;
 
@@ -28,9 +29,12 @@ public class Slave implements ISlave<String> {
     //如果弹出的元素存在（即Optional<String>不为空），这个方法会执行以下操作：
     //将这个元素添加到执行队列中，这个操作由service.sendExecuteQueue(context.slaveHashKey(), tValue.get())完成。
     //从原队列中删除这个元素，这个操作由context.getRedissonUtils().zrem(queueName, tValue.get())完成
-    // TODO: lua脚本优化 取任务-存入执行队列的过程
+    //如果队列数小于worker数,采用给队列上锁的方式抢占任务,如果worker数小于队列数,每个队列按照分配的任务队列无锁获取任务
     @Override
     public Optional<String> consume() {
+        if(context.getConfig().getQueueNums() < leaderService.getActiveNodeInfo().size()){
+            return consume_unlock();
+        }
         List<String> allQueue = context.getAllQueue();
         Collections.shuffle(allQueue);
         for (String queueName : allQueue) {
@@ -57,7 +61,6 @@ public class Slave implements ISlave<String> {
     }
 
     public Optional<String> consume_unlock() {
-        // todo 在队列数比worker数少的情况下，需要加锁获取任务
         List<Integer> queuesForWorker = leaderService.getQueuesForWorker(context.slaveHashKey());
         if(queuesForWorker.size()== 0){
             return Optional.empty();
@@ -71,12 +74,19 @@ public class Slave implements ISlave<String> {
         Collections.shuffle(allQueue);
 
         for (String queueName : allQueue) {
-            Optional<String> consumeResult = context.getRedissonUtils().zrpop(queueName);
-            if (consumeResult.isPresent()) {
-                log.info("slave[{}] consume start, queue: {}", context.slaveHashKey(), queueName);
-                service.sendExecuteQueue(context.slaveHashKey(), consumeResult.get());
-                log.info("slave[{}] consume finished, queue: {}, value: {}", context.slaveHashKey(), queueName, consumeResult);
-                return consumeResult;
+            RTransaction transaction = context.getRedissonUtils().createTransaction();
+            try {
+                Optional<String> consumeResult = context.getRedissonUtils().zrpop(queueName);
+                if (consumeResult.isPresent()) {
+                    log.info("slave[{}] consume start, queue: {}", context.slaveHashKey(), queueName);
+                    service.sendExecuteQueue(transaction,context.slaveHashKey(), consumeResult.get());
+                    transaction.commit();
+                    log.info("slave[{}] consume finished, queue: {}, value: {}", context.slaveHashKey(), queueName, consumeResult);
+                    return consumeResult;
+                }
+            } catch (Exception e) {
+                transaction.rollback();
+                log.error("Transaction failed", e);
             }
         }
         return Optional.empty(); // 如果所有队列都没有任务，返回空的Optional
